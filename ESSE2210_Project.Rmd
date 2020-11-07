@@ -1,0 +1,205 @@
+---
+title: "ESSE2210_Project"
+author: "Chethana Wickramasinghe"
+date: "11/1/2020"
+output: html_document
+runtime: shiny
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(utils)
+library(dplyr)
+library(tidyverse)
+library(scales)
+library(openxlsx)
+
+library(openair)
+library(lubridate)
+
+```
+
+
+
+```{r echo=FALSE}
+
+# file <- file.choose()
+
+air_samplying_data <- read.delim(file, header = FALSE)
+
+names(air_samplying_data) <- paste0(air_samplying_data[1,], "_" , air_samplying_data[2,])# creating headers
+
+air_samplying_data <- air_samplying_data[-c(1,2),] # remove the first to rows 
+
+particles <- unique(air_samplying_data$`PM2.5_         Âµg/m3`)
+
+ozone <- unique(air_samplying_data$O3_ppb)
+
+benzene <- unique(air_samplying_data$Benzene_ppb)
+
+nrow(air_samplying_data)
+summary(air_samplying_data)
+
+removed_text_data <- air_samplying_data
+
+removed_text_data$O3_ppb <- as.numeric(removed_text_data$O3_ppb)
+removed_text_data$Benzene_ppb<- as.numeric(removed_text_data$Benzene_ppb)
+removed_text_data$`PM2.5_         Âµg/m3` <- as.numeric(removed_text_data$`PM2.5_         Âµg/m3`)
+removed_text_data$Date_ <-dmy(removed_text_data$Date_)
+
+# as.numeric(removed_text_data$O3_ppb, removed_text_data$Benzene_ppb, removed_text_data$`PM2.5_         Âµg/m3`)
+
+removed_text_data <- removed_text_data %>% drop_na()
+
+# removed_text_data <- air_samplying_data %>% mutate_at(c(3,5), as.numeric) %>% drop_na()
+
+nrow(removed_text_data)
+
+str(removed_text_data)
+
+summary(removed_text_data)
+
+# graphs
+
+hist(removed_text_data$`PM2.5_         Âµg/m3`)
+hist(removed_text_data$`O3_ppb`)
+hist(removed_text_data$`Benzene_ppb`)
+
+# summaryPlot(mydata)
+
+ggplot(removed_text_data,  aes(Date_, O3_ppb)) + geom_point() +
+  theme(plot.caption = element_text(hjust = 0, size = 6),
+        plot.title = element_text(hjust = 0.5,size = 12, face = "bold"),
+        axis.title.x = element_text(hjust = 0.5, size = 15, face = "bold"),
+        axis.title.y = element_text(hjust = 0.5, size = 15, face = "bold"),
+        axis.text.x = element_text(hjust = 1, size = 10, angle = 45))
+
+# ggplot(df, aes(x = month, y = avg)) + 
+#   geom_bar(stat = "identity") + 
+#   scale_x_date(NULL, date_labels = "%b %y", breaks = "month")
+
+particle_data <- removed_text_data[1:3]
+o3_data <- removed_text_data[c(1,2,4)] %>% drop_na()
+benzene_data <- removed_text_data[c(1,2,5)]
+
+```
+
+```{r particledata}
+
+tmp <- particle_data %>% rename( PM = 'PM2.5_         Âµg/m3') %>% group_by(month = floor_date(Date_, unit = "month") ) %>%
+ arrange(month = floor_date(Date_, unit = "month")) %>% summarise(sum = sum(PM), avg = mean(PM)) %>% replace(is.na(.), 0) %>%
+ mutate(cs = cumsum(sum))
+
+# cumsum
+ggplot(tmp , aes(factor(month), cs)) + geom_bar(stat = "identity") +
+  theme(plot.caption = element_text(hjust = 0, size = 6),
+        plot.title = element_text(hjust = 0.5,size = 12, face = "bold"),
+        axis.title.x = element_text(hjust = 0.5, size = 15, face = "bold"),
+        axis.title.y = element_text(hjust = 0.5, size = 15, face = "bold"),
+        axis.text.x = element_text(hjust = 1, size = 10, angle = 45))
+
+# mean
+ggplot(tmp , aes(factor(month), avg)) + geom_bar(stat = "identity") +
+  theme(plot.caption = element_text(hjust = 0, size = 6),
+        plot.title = element_text(hjust = 0.5,size = 12, face = "bold"),
+        axis.title.x = element_text(hjust = 0.5, size = 15, face = "bold"),
+        axis.title.y = element_text(hjust = 0.5, size = 15, face = "bold"),
+        axis.text.x = element_text(hjust = 1, size = 10, angle = 45))
+
+
+```
+
+```{r ozone}
+# tmp <- o3_data %>% group_by(month = floor_date(Date_, unit = "month") ) %>% mutate(cumPM = cumsum('O3_ppb'))
+tmp <- o3_data %>% group_by(month = floor_date(Date_, unit = "month") ) %>%
+ arrange(month = floor_date(Date_, unit = "month"))%>% summarise(sum = sum(O3_ppb), avg = mean(O3_ppb)) %>%
+ mutate(cs = cumsum(sum))
+
+# cumsum
+ggplot(tmp , aes(factor(month), cs)) + geom_bar(stat = "identity") +
+  theme(plot.caption = element_text(hjust = 0, size = 6),
+        plot.title = element_text(hjust = 0.5,size = 12, face = "bold"),
+        axis.title.x = element_text(hjust = 0.5, size = 15, face = "bold"),
+        axis.title.y = element_text(hjust = 0.5, size = 15, face = "bold"),
+        axis.text.x = element_text(hjust = 1, size = 10, angle = 45))
+
+# mean
+ggplot(tmp , aes(factor(month), avg)) + geom_bar(stat = "identity") +
+  theme(plot.caption = element_text(hjust = 0, size = 6),
+        plot.title = element_text(hjust = 0.5,size = 12, face = "bold"),
+        axis.title.x = element_text(hjust = 0.5, size = 15, face = "bold"),
+        axis.title.y = element_text(hjust = 0.5, size = 15, face = "bold"),
+        axis.text.x = element_text(hjust = 1, size = 10, angle = 45))
+
+
+
+```
+
+```{r benzene}
+# tmp <- o3_data %>% group_by(month = floor_date(Date_, unit = "month") ) %>% mutate(cumPM = cumsum('O3_ppb'))
+tmp <- benzene_data %>% drop_na() %>% group_by(month = floor_date(Date_, unit = "month") ) %>%
+ arrange(month = floor_date(Date_, unit = "month"))%>% summarise(sum = sum(Benzene_ppb), avg = mean(Benzene_ppb)) %>%  replace(is.na(.), 0) %>%
+ mutate(cs = cumsum(sum))
+
+# cumsum
+ggplot(tmp , aes(factor(month), cs)) + geom_bar(stat = "identity") +
+  theme(plot.caption = element_text(hjust = 0, size = 6),
+        plot.title = element_text(hjust = 0.5,size = 12, face = "bold"),
+        axis.title.x = element_text(hjust = 0.5, size = 15, face = "bold"),
+        axis.title.y = element_text(hjust = 0.5, size = 15, face = "bold"),
+        axis.text.x = element_text(hjust = 1, size = 10, angle = 45))
+
+# mean
+ggplot(tmp , aes(factor(month), avg)) + geom_bar(stat = "identity") +
+  theme(plot.caption = element_text(hjust = 0, size = 6),
+        plot.title = element_text(hjust = 0.5,size = 12, face = "bold"),
+        axis.title.x = element_text(hjust = 0.5, size = 15, face = "bold"),
+        axis.title.y = element_text(hjust = 0.5, size = 15, face = "bold"),
+        axis.text.x = element_text(hjust = 1, size = 10, angle = 45))
+
+
+
+```
+
+```{r all}
+
+removed_text_data <- as_tibble(removed_text_data) %>% drop_na()
+tmp <- removed_text_data %>% rename( PM = 'PM2.5_         Âµg/m3') %>% group_by(month = floor_date(Date_, unit = "month") ) %>%
+ arrange(month = floor_date(Date_, unit = "month")) %>% summarise(PM_sum = sum(PM), PM_avg = mean(PM), O3_sum = sum(O3_ppb), O3_avg = mean(O3_ppb), Ben_sum = sum(Benzene_ppb), Ben_avg = mean(Benzene_ppb)) %>% replace(is.na(.), 0) %>%
+ mutate(PM_cs = cumsum(PM_sum), O3_cs = cumsum(O3_sum), Ben_cs = cumsum(Ben_sum))
+
+tmp_long_avg <- pivot_longer(tmp, cols = ends_with("avg"), names_to = "AVG", values_to = "AVG_Value") %>% select(month, AVG, AVG_Value)
+
+
+ggplot(tmp_long_avg , aes(x=factor(month) , y= AVG_Value)) + geom_bar(stat = "identity",position = "dodge") +
+    facet_wrap(~AVG, ncol=1, as.table = TRUE, scale = "free") +
+  theme(plot.caption = element_text(hjust = 0, size = 6),
+        plot.title = element_text(hjust = 0.5,size = 12, face = "bold"),
+        axis.title.x = element_text(hjust = 0.5, size = 15, face = "bold"),
+        axis.title.y = element_text(hjust = 0.5, size = 15, face = "bold"),
+        axis.text.x = element_text(hjust = 1, size = 10, angle = 45))
+
+tmp_long_cumsum <- pivot_longer(tmp, cols = ends_with("cs"), names_to = "CUMSUM", values_to = "CUMSUM_Value") %>% select(month, CUMSUM, CUMSUM_Value)
+
+ggplot(tmp_long_cumsum , aes(x=factor(month) , y= CUMSUM_Value)) + geom_bar(stat = "identity",position = "dodge") +
+    facet_wrap(~CUMSUM, ncol=1, as.table = TRUE, scale = "free") +
+  theme(plot.caption = element_text(hjust = 0, size = 6),
+        plot.title = element_text(hjust = 0.5,size = 12, face = "bold"),
+        axis.title.x = element_text(hjust = 0.5, size = 15, face = "bold"),
+        axis.title.y = element_text(hjust = 0.5, size = 15, face = "bold"),
+        axis.text.x = element_text(hjust = 1, size = 10, angle = 45))
+
+
+max(removed_text_data$`PM2.5_         Âµg/m3`)
+# [1] 62
+max(removed_text_data$O3_ppb)
+# [1] 82
+max(removed_text_data$Benzene_ppb)
+# [1] 18.24
+
+```
+
+
+
+
+
