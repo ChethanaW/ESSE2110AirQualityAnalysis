@@ -23,7 +23,7 @@ library(lubridate)
 
 ```{r echo=FALSE}
 
-# file <- file.choose()
+file <- file.choose()
 
 air_samplying_data <- read.delim(file, header = FALSE)
 
