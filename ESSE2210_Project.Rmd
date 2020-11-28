@@ -61,18 +61,18 @@ summary(removed_text_data)
 
 # graphs
 
-hist(removed_text_data$`PM2.5_         Âµg/m3`)
-hist(removed_text_data$`O3_ppb`)
-hist(removed_text_data$`Benzene_ppb`)
+# hist(removed_text_data$`PM2.5_         Âµg/m3`)
+# hist(removed_text_data$`O3_ppb`)
+# hist(removed_text_data$`Benzene_ppb`)
 
 # summaryPlot(mydata)
 
-ggplot(removed_text_data,  aes(Date_, O3_ppb)) + geom_point() +
-  theme(plot.caption = element_text(hjust = 0, size = 6),
-        plot.title = element_text(hjust = 0.5,size = 12, face = "bold"),
-        axis.title.x = element_text(hjust = 0.5, size = 15, face = "bold"),
-        axis.title.y = element_text(hjust = 0.5, size = 15, face = "bold"),
-        axis.text.x = element_text(hjust = 1, size = 10, angle = 45))
+# ggplot(removed_text_data,  aes(Date_, O3_ppb)) + geom_point() +
+#   theme(plot.caption = element_text(hjust = 0, size = 6),
+#         plot.title = element_text(hjust = 0.5,size = 12, face = "bold"),
+#         axis.title.x = element_text(hjust = 0.5, size = 15, face = "bold"),
+#         axis.title.y = element_text(hjust = 0.5, size = 15, face = "bold"),
+#         axis.text.x = element_text(hjust = 1, size = 10, angle = 45))
 
 # ggplot(df, aes(x = month, y = avg)) + 
 #   geom_bar(stat = "identity") + 
@@ -107,6 +107,19 @@ unique(month(top_highest_recorded_levels$Date_))
 
 max(particle_data$PM)
 # [1] 62 [µg/m3]
+
+# Averaging Time: 24hour mean
+mean((particle_data %>% group_by(day(Date_)) %>% summarise(meanpm = mean(PM)))$meanpm)
+# [1] 8.285579
+
+quantile(particle_data$PM, c(.32, .57, .98)) 
+# 32% 57% 98% 
+#   4   8  26
+
+# Averaging Time: Annual mean
+mean(particle_data$PM)
+# [1] 8.279944
+
 
 # scatter plot
 ggplot(particle_data, aes( Date_,PM )) + geom_point(color= "#FF6666") +
@@ -201,6 +214,18 @@ unique(month(top_highest_recorded_levels$Date_))
 max(o3_data$O3_ppb)
 # [1] 82 ppb
 
+# Averaging Time: 24hour mean
+mean((o3_data %>% group_by(day(Date_)) %>% summarise(meano3 = mean(O3_ppb)))$meano3)
+# [1] 27.64747
+
+quantile(o3_data$O3_ppb, c(.32, .57, .98)) 
+# 32% 57% 98% 
+#  22  30  58
+
+# Averaging Time: Annual mean
+mean(o3_data$O3_ppb)
+# [1] 27.66188
+
 # scatter plot
 ggplot(o3_data, aes( Date_,O3_ppb )) + geom_point(color= "#09B8BD") +
   theme(plot.caption = element_text(hjust = 0, size = 6),
@@ -289,6 +314,18 @@ unique(month(top_highest_recorded_levels$Date_))
 
 max(benzene_data$Benzene_ppb)
 # [1] 18.24 ppb
+
+# Averaging Time: 24hour mean
+mean((benzene_data %>% group_by(day(Date_)) %>% summarise(meanbenzene = mean(Benzene_ppb)))$meanbenzene)
+# [1] 0.2130141
+
+quantile(benzene_data$Benzene_ppb, c(.32, .57, .98)) 
+#    32%    57%    98% 
+# 0.0000 0.0000 2.3256
+
+# Averaging Time: Annual mean
+mean(benzene_data$Benzene_ppb)
+# [1] 0.2131907
 
 # scatter plot
 ggplot(benzene_data, aes( Date_,Benzene_ppb )) + geom_point(color= "#B69233") +
@@ -408,6 +445,21 @@ renderTable({
   summarydata
   
 })
+
+ggplot(removed_text_data, aes(PM, O3_ppb )) + geom_point()
+
+library(corrplot)
+
+corrplot(cor(removed_text_data[3:5]),
+  method = "number",
+  type = "upper" # show only upper side
+)
+
+datacor <- cor(removed_text_data[3:5])
+
+corrplot(datacor, type = "upper", order = "hclust", 
+         tl.col = "black", tl.srt = 45)
+
 ```
 
 
