@@ -23,7 +23,7 @@ library(lubridate)
 
 ```{r echo=FALSE}
 
-file <- file.choose()
+file <- file.choose() #ESSE221-ProjectRawData.txt file provided 
 
 air_samplying_data <- read.delim(file, header = FALSE)
 
@@ -263,7 +263,7 @@ ggplot(tmp , aes(factor(month), avg)) + geom_bar(stat = "identity", fill= "#09B8
             x = "Month",
             y = "Average amount of Ozone [ppb]") 
 
-
+#https://www.durhamimmigration.ca/en/moving-to-durham-region/weather---four-seasons.aspx
 tmp3 <- o3_data %>% mutate(Season = case_when(Season = month(Date_) == 3 | month(Date_) == 4 | month(Date_) == 5 ~ "Spring",
                                                                                               month(Date_) == 6 | month(Date_) == 7 | month(Date_) == 8 ~ "Summer",
                                                                                               month(Date_) == 9 | month(Date_) == 10 | month(Date_) == 11 ~ "Fall",
